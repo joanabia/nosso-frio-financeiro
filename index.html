@@ -1,13 +1,1670 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>nosso-frio-financeiro</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f2f3e">
+<title>NOSSO FRIO | Mossoró - RN</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+:root {
+  --azul: #0f2f3e;
+  --amarelo: #f5c518;
+  --verde: #16a34a;
+  --cinza: #64748b;
+  --fundo: #f3f6f8;
+  --borda: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: var(--fundo);
+  color: #1e293b;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.header {
+  background: var(--azul);
+  color: #fff;
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 3px solid var(--amarelo);
+}
+
+.logo {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.logo-icon {
+  background: var(--amarelo);
+  color: var(--azul);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+}
+
+.badge {
+  background: var(--amarelo);
+  color: var(--azul);
+  border-radius: 20px;
+  padding: 6px 10px;
+  font-weight: bold;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+#map {
+  width: 100%;
+  height: 300px;
+  background: #dce5e9;
+  z-index: 1;
+}
+
+#infoMapa {
+  display: none;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  width: fit-content;
+  max-width: calc(100% - 20px);
+  background: var(--azul);
+  color: var(--amarelo);
+  padding: 9px 12px;
+  border-radius: 10px;
+  z-index: 500;
+  font-size: 11px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px #0004;
+}
+
+.page {
+  max-width: 760px;
+  margin: auto;
+  padding: 18px 13px 110px;
+}
+
+.section-title {
+  color: var(--azul);
+  font-size: 20px;
+  font-weight: 900;
+  margin-bottom: 12px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.card {
+  position: relative;
+  background: #fff;
+  border: 2px solid var(--borda);
+  border-radius: 14px;
+  padding: 20px 8px 16px;
+  text-align: center;
+  color: var(--azul);
+}
+
+.card.selected {
+  background: var(--azul);
+  color: #fff;
+  border-color: var(--amarelo);
+}
+
+.tag {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 8px;
+  font-weight: 900;
+  padding: 4px 6px;
+  border-radius: 20px;
+}
+
+.def {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.ser {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.cta, .secondary {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 800;
+  text-align: center;
+  border: 0;
+}
+
+.cta {
+  background: var(--azul);
+  color: var(--amarelo);
+}
+
+.cta:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.secondary {
+  background: var(--azul);
+  color: #fff;
+}
+
+.whatsapp {
+  background: var(--verde);
+  color: #fff;
+}
+
+.btn-rota, .btn-fim {
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  border-radius: 10px;
+  font-weight: 900;
+  margin-top: 8px;
+}
+
+.btn-rota {
+  background: #0066ff;
+  color: #fff;
+}
+
+.btn-fim {
+  background: var(--verde);
+  color: #fff;
+}
+
+.panel {
+  display: none;
+}
+
+.panel.active {
+  display: block;
+}
+
+.panel-card {
+  background: #fff;
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.field {
+  display: block;
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--azul);
+}
+
+.field input, .field select, .field textarea {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.field textarea {
+  min-height: 85px;
+  resize: vertical;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.sec-title {
+  font-size: 11px;
+  font-weight: 900;
+  background: #f1f5f9;
+  padding: 8px;
+  border-radius: 8px;
+  margin: 12px 0 8px;
+}
+
+.tabs {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: #fff;
+  border-top: 1px solid var(--borda);
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+  z-index: 999;
+}
+
+.tab {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  color: var(--cinza);
+  font-size: 10px;
+  text-align: center;
+  padding: 3px 0;
+}
+
+.tab.active {
+  color: var(--azul);
+  font-weight: 900;
+}
+
+.tab span {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 3px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+th {
+  font-size: 10px;
+  color: var(--cinza);
+  text-align: left;
+  padding: 8px;
+  background: #f8fafc;
+}
+
+td {
+  padding: 8px;
+  border-bottom: 1px solid var(--borda);
+  vertical-align: top;
+}
+
+.pill {
+  font-size: 10px;
+  font-weight: 900;
+  padding: 4px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.p-pend {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.p-rota {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.p-fim {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.btn-excel, .btn-limpar {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.btn-excel {
+  background: #107c41;
+  color: #fff;
+  border: 0;
+}
+
+.btn-limpar {
+  background: #fff;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.barra {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.barra-fill {
+  height: 100%;
+  width: 0%;
+  background: #0066ff;
+  transition: width .2s linear;
+}
+
+.info-texto {
+  font-size: 12px;
+  color: var(--cinza);
+  line-height: 1.6;
+  margin-top: 8px;
+}
+
+@media (max-width: 480px) {
+  .header h1 {
+    font-size: 18px;
+  }
+
+  .badge {
+    font-size: 9px;
+    padding: 5px 7px;
+  }
+
+  .page {
+    padding: 14px 10px 105px;
+  }
+
+  .panel-card {
+    padding: 12px;
+  }
+
+  .field-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .tab {
+    font-size: 9px;
+  }
+
+  .tab span {
+    font-size: 17px;
+  }
+
+  #map {
+    height: 300px;
+  }
+
+  table {
+    min-width: 560px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">❄</div>
+    <div>
+      <h1>NOSSO FRIO</h1>
+      <span style="font-size:10px">MOSSORÓ - RN | REFRIGERAÇÃO</span>
+    </div>
+  </div>
+  <div class="badge">ATENDIMENTO</div>
+</header>
+
+<div style="position:relative">
+  <div id="map"></div>
+  <div id="infoMapa"></div>
+</div>
+
+<main class="page">
+
+  <!-- INÍCIO -->
+  <section id="inicio" class="panel active">
+    <h2 class="section-title">Qual é o problema do seu ar?</h2>
+    <p class="info-texto">Selecione o serviço desejado e fale diretamente com nosso técnico.</p>
+    <div class="grid" id="grid"></div>
+    <button class="cta" id="cta" disabled>SELECIONE UM SERVIÇO</button>
+  </section>
+
+  <!-- AGENDAMENTO -->
+  <section id="agendar" class="panel">
+    <h2 class="section-title">📅 Agendamento</h2>
+    <div class="panel-card">
+      <p class="info-texto">Preencha os dados para conversar com Roberto Freitas e combinar o atendimento.</p>
+
+      <form id="formAgendamento">
+        <label class="field">Nome
+          <input id="nome" required autocomplete="name">
+        </label>
+
+        <label class="field">Telefone para contato
+          <input id="telefone" required type="tel" autocomplete="tel" placeholder="(84) 99999-9999">
+        </label>
+
+        <label class="field">Empresa ou cliente
+          <input id="empresa" required placeholder="Nome da empresa ou estabelecimento">
+        </label>
+
+        <label class="field">Serviço
+          <select id="servico" required>
+            <option value="">Selecione</option>
+            <option>Instalação</option>
+            <option>Limpeza</option>
+            <option>Manutenção</option>
+            <option>Não gela</option>
+            <option>Gotejando</option>
+            <option>Barulho</option>
+            <option>Não liga</option>
+            <option>Outro</option>
+          </select>
+        </label>
+
+        <div class="field-row">
+          <label class="field">Data desejada
+            <input id="data" type="date" required>
+          </label>
+          <label class="field">Horário desejado
+            <input id="horaAgendada" type="time" required>
+          </label>
+        </div>
+
+        <label class="field">Endereço completo
+          <input id="endereco" required placeholder="Rua, número, bairro e cidade">
+        </label>
+
+        <label class="field">Detalhes adicionais
+          <textarea id="detalhes" placeholder="Descreva o problema, se necessário"></textarea>
+        </label>
+
+        <button class="secondary whatsapp" type="submit">
+          📲 Enviar agendamento pelo WhatsApp
+        </button>
+      </form>
+
+      <p class="info-texto">O envio abre uma conversa com Roberto. A solicitação só será confirmada após o alinhamento do horário.</p>
+    </div>
+  </section>
+
+  <!-- RASTREIO -->
+  <section id="rastreio" class="panel">
+    <h2 class="section-title">📍 Rota do técnico</h2>
+    <p class="info-texto">Consulte os atendimentos cadastrados e o estado da rota neste aparelho.</p>
+    <div id="listaRastreio"></div>
+  </section>
+
+  <!-- TÉCNICO -->
+  <section id="painel-tecnico" class="panel">
+    <h2 class="section-title">👷 Painel do técnico</h2>
+
+    <div class="panel-card">
+      <p class="info-texto">Cadastre o cliente e o endereço correto antes de iniciar o deslocamento.</p>
+
+      <label class="field">Nome do cliente
+        <input id="tecNome" required>
+      </label>
+
+      <label class="field">Empresa / estabelecimento
+        <input id="tecEmpresa" required placeholder="Nome do cliente empresarial">
+      </label>
+
+      <label class="field">Telefone do cliente
+        <input id="tecTelefone" type="tel">
+      </label>
+
+      <div class="sec-title">ENDEREÇO DO ATENDIMENTO</div>
+
+      <div class="field-row">
+        <label class="field">CEP
+          <input id="tecCep" placeholder="59600-000">
+        </label>
+        <label class="field">Número
+          <input id="tecNumero" required>
+        </label>
+      </div>
+
+      <label class="field">Rua
+        <input id="tecRua" required>
+      </label>
+
+      <div class="field-row">
+        <label class="field">Bairro
+          <input id="tecBairro" required>
+        </label>
+        <label class="field">Cidade
+          <input id="tecCidade" value="Mossoró" required>
+        </label>
+      </div>
+
+      <button class="secondary" type="button" id="btnCep" style="margin-top:8px">
+        Consultar CEP
+      </button>
+
+      <label class="field">Serviço
+        <select id="tecServico">
+          <option>Instalação</option>
+          <option>Limpeza</option>
+          <option>Manutenção</option>
+          <option>Não gela</option>
+          <option>Gotejando</option>
+          <option>Barulho</option>
+          <option>Não liga</option>
+          <option>Outro</option>
+        </select>
+      </label>
+
+      <label class="field">Valor do serviço (R$)
+        <input id="tecValor" type="number" min="0" step="0.01" placeholder="0,00">
+      </label>
+
+      <label class="field">O que foi feito
+        <textarea id="tecFeito" placeholder="Observações sobre o atendimento"></textarea>
+      </label>
+
+      <button class="secondary" id="btnCadastrarTecnico" type="button" style="background:#16a34a">
+        💾 CADASTRAR NO ADMIN
+      </button>
+      <button class="secondary" id="btnFinalizarDia" type="button" style="background:#475569">
+        🏁 FINALIZAR ROTA DO DIA
+      </button>
+    </div>
+
+    <div class="panel-card">
+      <h3 style="color:var(--azul)">Como iniciar uma rota</h3>
+      <p class="info-texto">
+        1. Cadastre o endereço do cliente.<br>
+        2. Abra a aba Rastreio.<br>
+        3. Clique em Iniciar rota.<br>
+        4. Permita o acesso ao GPS quando solicitado.<br>
+        5. Mantenha esta página aberta durante o deslocamento.<br>
+        6. Confirme a chegada ao concluir o atendimento.
+      </p>
+    </div>
+  </section>
+
+  <!-- ADMIN -->
+  <section id="admin" class="panel">
+    <h2 class="section-title">🔒 Administração</h2>
+    <p class="info-texto">A senha inicial permanece 1234. Altere-a antes de usar o sistema com dados empresariais reais.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0">
+      <div class="panel-card">
+        <p style="font-size:10px">TOTAL</p>
+        <b id="kpi-total">0</b>
+      </div>
+      <div class="panel-card">
+        <p style="font-size:10px">PENDENTES</p>
+        <b id="kpi-pend">0</b>
+      </div>
+      <div class="panel-card">
+        <p style="font-size:10px">EM ROTA</p>
+        <b id="kpi-rota">0</b>
+      </div>
+      <div class="panel-card">
+        <p style="font-size:10px">FATURADO</p>
+        <b id="kpi-fat">R$ 0,00</b>
+      </div>
+    </div>
+
+    <div class="panel-card" style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-excel" id="btnExportar">📊 Exportar CSV</button>
+      <button class="btn-limpar" id="btnLimpar">🗑 Limpar atendimentos</button>
+    </div>
+
+    <div class="panel-card" style="padding:0;overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Cliente / Empresa</th>
+            <th>Serviço</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyAdmin"></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="inicio"><span>⌂</span>Início</button>
+  <button class="tab" data-tab="agendar"><span>📅</span>Agendar</button>
+  <button class="tab" data-tab="rastreio"><span>📍</span>Rastreio</button>
+  <button class="tab" data-tab="painel-tecnico"><span>👷</span>Técnico</button>
+  <button class="tab" data-tab="admin"><span>🔒</span>Admin</button>
+</nav>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+'use strict';
+
+/* CONFIGURAÇÕES */
+const WHATSAPP = '558498407706';
+const SENHA = '1234';
+const BASE_MOSSORO = [-5.1875, -37.3442];
+const STORAGE_KEY = 'nf_atend';
+
+let mapa = null;
+let rotaLayer = null;
+let rotaExtraLayer = null;
+let tecnicoMarker = null;
+let marcadorOrigem = null;
+let marcadorDestino = null;
+let animacaoInterval = null;
+let rotaCoords = [];
+let selecionado = null;
+let rotaAtivaId = null;
+let gpsWatchId = null;
+let marcadorBase = null;
+let ultimaAtualizacaoRota = 0;
+let gpsAtual = null;
+
+/* ARMAZENAMENTO LOCAL */
+function getAtend() {
+  try {
+    const dados = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    return Array.isArray(dados) ? dados : [];
+  } catch (erro) {
+    console.error('Erro ao ler atendimentos:', erro);
+    return [];
+  }
+}
+
+function saveAtend(lista) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(lista));
+    return true;
+  } catch (erro) {
+    alert('Não foi possível salvar os dados neste aparelho.');
+    return false;
+  }
+}
+
+function escapar(valor) {
+  return String(valor ?? '').replace(/[&<>"']/g, caractere => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[caractere]);
+}
+
+function abrirZap(mensagem) {
+  const url = 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(mensagem);
+  const janela = window.open(url, '_blank');
+
+  if (!janela) {
+    window.location.href = url;
+  }
+}
+
+/* SERVIÇOS */
+const defeitos = [
+  {t:'Não gela', i:'❄️', k:'DEFEITO'},
+  {t:'Gotejando', i:'💧', k:'DEFEITO'},
+  {t:'Barulho', i:'🔊', k:'DEFEITO'},
+  {t:'Não liga', i:'⏻', k:'DEFEITO'},
+  {t:'Limpeza', i:'✨', k:'SERVIÇO'},
+  {t:'Instalação', i:'🔧', k:'SERVIÇO'},
+  {t:'Manutenção', i:'🛠️', k:'SERVIÇO'}
+];
+
+function criarCartoes() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  defeitos.forEach(servico => {
+    const cartao = document.createElement('button');
+    cartao.type = 'button';
+    cartao.className = 'card';
+
+    cartao.innerHTML =
+      '<span class="tag ' +
+      (servico.k === 'SERVIÇO' ? 'ser' : 'def') + '">' +
+      servico.k + '</span>' +
+      '<div style="font-size:24px">' + servico.i + '</div>' +
+      '<b>' + escapar(servico.t) + '</b>';
+
+    cartao.addEventListener('click', () => {
+      selecionado = servico;
+
+      document.querySelectorAll('.card').forEach(item => {
+        item.classList.remove('selected');
+      });
+
+      cartao.classList.add('selected');
+
+      const botao = document.getElementById('cta');
+      botao.disabled = false;
+      botao.textContent = 'AGENDAR - ' + servico.t;
+    });
+
+    grid.appendChild(cartao);
+  });
+}
+
+document.getElementById('cta').addEventListener('click', () => {
+  if (!selecionado) return;
+
+  document.getElementById('servico').value =
+    [...document.getElementById('servico').options]
+      .some(opcao => opcao.value === selecionado.t)
+      ? selecionado.t
+      : 'Outro';
+
+  mostrarPainel('agendar');
+});
+
+/* NAVEGAÇÃO */
+function mostrarPainel(nome) {
+  if (nome === 'admin') {
+    const senha = prompt('Digite a senha do administrador:');
+
+    if (senha !== SENHA) {
+      alert('Senha incorreta.');
+      return;
+    }
+
+    renderAdmin();
+  }
+
+  if (nome === 'rastreio') renderRastreio();
+
+  document.querySelectorAll('.panel').forEach(painel => {
+    painel.classList.toggle('active', painel.id === nome);
+  });
+
+  document.querySelectorAll('.tab').forEach(botao => {
+    botao.classList.toggle('active', botao.dataset.tab === nome);
+  });
+
+  if (mapa) {
+    setTimeout(() => mapa.invalidateSize(), 150);
+  }
+}
+
+document.querySelectorAll('.tab').forEach(botao => {
+  botao.addEventListener('click', () => mostrarPainel(botao.dataset.tab));
+});
+
+/* CEP */
+async function buscarCep() {
+  const campo = document.getElementById('tecCep');
+  const cep = campo.value.replace(/\D/g, '');
+
+  if (cep.length !== 8) {
+    alert('Digite um CEP válido com oito números.');
+    return;
+  }
+
+  try {
+    const resposta = await fetch('https://viacep.com.br/ws/' + cep + '/json/');
+    if (!resposta.ok) throw new Error('Consulta indisponível');
+
+    const dados = await resposta.json();
+
+    if (dados.erro) {
+      alert('CEP não encontrado.');
+      return;
+    }
+
+    document.getElementById('tecRua').value = dados.logradouro || '';
+    document.getElementById('tecBairro').value = dados.bairro || '';
+    document.getElementById('tecCidade').value = dados.localidade || 'Mossoró';
+  } catch (erro) {
+    alert('Não foi possível consultar o CEP. Preencha o endereço manualmente.');
+  }
+}
+
+document.getElementById('btnCep').addEventListener('click', buscarCep);
+
+/* LOCALIZAR ENDEREÇO NO MAPA */
+async function geocodificarEndereco(endereco) {
+  const consulta = endereco + ', Rio Grande do Norte, Brasil';
+  const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=' +
+    encodeURIComponent(consulta);
+
+  const resposta = await fetch(url);
+
+  if (!resposta.ok) {
+    throw new Error('O serviço de mapas está indisponível.');
+  }
+
+  const resultados = await resposta.json();
+
+  if (!resultados.length) {
+    throw new Error('Endereço não encontrado. Confira rua, número, bairro e cidade.');
+  }
+
+  return [
+    Number(resultados[0].lat),
+    Number(resultados[0].lon)
+  ];
+}
+
+/* CADASTRO PELO PAINEL DO TÉCNICO */
+document.getElementById('btnCadastrarTecnico').addEventListener('click', cadastrarTecnico);
+
+async function cadastrarTecnico() {
+  const nome = document.getElementById('tecNome').value.trim();
+  const empresa = document.getElementById('tecEmpresa').value.trim();
+  const telefone = document.getElementById('tecTelefone').value.trim();
+  const cep = document.getElementById('tecCep').value.trim();
+  const rua = document.getElementById('tecRua').value.trim();
+  const numero = document.getElementById('tecNumero').value.trim();
+  const bairro = document.getElementById('tecBairro').value.trim();
+  const cidade = document.getElementById('tecCidade').value.trim();
+  const servico = document.getElementById('tecServico').value;
+  const valor = Number(document.getElementById('tecValor').value) || 0;
+  const feito = document.getElementById('tecFeito').value.trim();
+
+  if (!nome || !empresa || !rua || !numero || !bairro || !cidade) {
+    alert('Preencha nome, empresa/cliente e endereço completo.');
+    return;
+  }
+
+  const enderecoCompleto =
+    rua + ', ' + numero + ', ' + bairro + ', ' + cidade +
+    (cep ? ', CEP ' + cep : '');
+
+  const botao = document.getElementById('btnCadastrarTecnico');
+  botao.disabled = true;
+  botao.textContent = 'Localizando endereço...';
+
+  let coordenadas;
+
+  try {
+    coordenadas = await geocodificarEndereco(enderecoCompleto);
+  } catch (erro) {
+    alert(erro.message);
+    botao.disabled = false;
+    botao.textContent = '💾 CADASTRAR NO ADMIN';
+    return;
+  }
+
+  const agora = new Date();
+  const lista = getAtend();
+
+  const atendimento = {
+    id: 'NF-' + Date.now(),
+    nome,
+    empresa,
+    telefone,
+    cep,
+    rua,
+    numero,
+    bairro,
+    cidade,
+    endereco: enderecoCompleto,
+    enderecoCompleto,
+    servico,
+    valor,
+    feito,
+    data: agora.toLocaleDateString('pt-BR'),
+    hora: agora.toLocaleTimeString('pt-BR'),
+    status: 'pendente',
+    lat: coordenadas[0],
+    lon: coordenadas[1],
+    tecnico: 'Roberto Freitas'
+  };
+
+  lista.unshift(atendimento);
+
+  if (saveAtend(lista)) {
+    renderAdmin();
+    renderRastreio();
+    alert('Atendimento cadastrado. Abra Rastreio para iniciar a rota.');
+    mostrarPainel('rastreio');
+  }
+
+  botao.disabled = false;
+  botao.textContent = '💾 CADASTRAR NO ADMIN';
+}
+
+/* AGENDAMENTO DO CLIENTE */
+document.getElementById('formAgendamento').addEventListener('submit', async evento => {
+  evento.preventDefault();
+  const janelaWhatsApp = window.open('about:blank', '_blank');
+
+  const nome = document.getElementById('nome').value.trim();
+  const telefone = document.getElementById('telefone').value.trim();
+  const empresa = document.getElementById('empresa').value.trim();
+  const servico = document.getElementById('servico').value;
+  const data = document.getElementById('data').value;
+  const horaAgendada = document.getElementById('horaAgendada').value;
+  const endereco = document.getElementById('endereco').value.trim();
+  const detalhes = document.getElementById('detalhes').value.trim();
+
+  if (!nome || !telefone || !empresa || !servico || !data || !horaAgendada || !endereco) {
+    alert('Preencha todos os campos obrigatórios.');
+    return;
+  }
+
+  const botao = evento.submitter;
+  botao.disabled = true;
+  botao.textContent = 'Preparando agendamento...';
+
+  let coordenadas = null;
+  try {
+    coordenadas = await geocodificarEndereco(endereco);
+  } catch (erro) {
+    console.warn('Endereço não localizado agora; o técnico poderá tentar novamente:', erro);
+  }
+
+  const agora = new Date();
+  const id = 'NF-' + Date.now();
+
+  const atendimento = {
+    id,
+    nome,
+    telefone,
+    empresa,
+    endereco,
+    enderecoCompleto: endereco,
+    servico,
+    data,
+    horaAgendada,
+    hora: agora.toLocaleTimeString('pt-BR'),
+    status: 'pendente',
+    lat: coordenadas ? coordenadas[0] : null,
+    lon: coordenadas ? coordenadas[1] : null,
+    tecnico: 'Roberto Freitas',
+    valor: 0,
+    detalhes
+  };
+
+  const lista = getAtend();
+  lista.unshift(atendimento);
+
+  if (!saveAtend(lista)) {
+    if (janelaWhatsApp) janelaWhatsApp.close();
+    botao.disabled = false;
+    botao.textContent = '📲 Enviar agendamento pelo WhatsApp';
+    return;
+  }
+
+  renderRastreio();
+  renderAdmin();
+
+  const mensagem =
+    'Olá, Roberto Freitas! Tudo bem?\n\n' +
+    'Sou ' + nome + ', da empresa ' + empresa + '.\n' +
+    'Gostaria de combinar um atendimento com a NOSSO FRIO.\n\n' +
+    '*Protocolo:* ' + id + '\n' +
+    '*Serviço:* ' + servico + '\n' +
+    '*Data desejada:* ' + data + '\n' +
+    '*Horário desejado:* ' + horaAgendada + '\n' +
+    '*Endereço:* ' + endereco + '\n' +
+    '*Telefone:* ' + telefone + '\n' +
+    '*Detalhes:* ' + (detalhes || 'Não informado') + '\n\n' +
+    'Por favor, confirme a disponibilidade e o horário. Obrigado(a)!';
+
+  const urlWhatsApp = 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(mensagem);
+  if (janelaWhatsApp && !janelaWhatsApp.closed) {
+    janelaWhatsApp.location.href = urlWhatsApp;
+  } else {
+    window.location.href = urlWhatsApp;
+  }
+
+  alert('Solicitação salva com o protocolo ' + id + '. Confirme o dia e horário com o técnico pelo WhatsApp.');
+  mostrarPainel('rastreio');
+  botao.disabled = false;
+  botao.textContent = '📲 Enviar agendamento pelo WhatsApp';
+});
+
+/* MAPA */
+function inicializarMapa() {
+  if (typeof L === 'undefined') {
+    document.getElementById('map').innerHTML =
+      '<p style="padding:20px">Não foi possível carregar o mapa. Verifique sua conexão.</p>';
+    return;
+  }
+
+  mapa = L.map('map').setView(BASE_MOSSORO, 13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(mapa);
+
+  marcadorBase = L.marker(BASE_MOSSORO)
+    .addTo(mapa)
+    .bindPopup('Base de referência NOSSO FRIO - Mossoró');
+}
+
+function atualizarInfoMapa(texto) {
+  const caixa = document.getElementById('infoMapa');
+  caixa.textContent = texto;
+  caixa.style.display = 'block';
+}
+
+function limparRotaDoMapa() {
+  if (animacaoInterval) {
+    clearInterval(animacaoInterval);
+    animacaoInterval = null;
+  }
+
+  if (gpsWatchId !== null && navigator.geolocation) {
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+  }
+
+  [rotaLayer, rotaExtraLayer, tecnicoMarker, marcadorOrigem, marcadorDestino]
+    .forEach(camada => {
+      if (camada && mapa && mapa.hasLayer(camada)) {
+        mapa.removeLayer(camada);
+      }
+    });
+
+  rotaLayer = null;
+  rotaExtraLayer = null;
+  tecnicoMarker = null;
+  marcadorOrigem = null;
+  marcadorDestino = null;
+  rotaCoords = [];
+  rotaAtivaId = null;
+}
+
+function interpolarRota(coordenadas, progresso) {
+  if (coordenadas.length < 2) return coordenadas[0];
+
+  const total = coordenadas.length - 1;
+  const posicao = Math.min(1, Math.max(0, progresso)) * total;
+  const indice = Math.min(Math.floor(posicao), total - 1);
+  const fracao = posicao - indice;
+
+  const a = coordenadas[indice];
+  const b = coordenadas[indice + 1];
+
+  return [
+    a[0] + (b[0] - a[0]) * fracao,
+    a[1] + (b[1] - a[1]) * fracao
+  ];
+}
+
+/* BUSCAR ROTA PELAS RUAS */
+async function obterRota(origemLat, origemLon, destinoLat, destinoLon) {
+  const url =
+    'https://router.project-osrm.org/route/v1/driving/' +
+    origemLon + ',' + origemLat + ';' +
+    destinoLon + ',' + destinoLat +
+    '?overview=full&geometries=geojson';
+
+  const resposta = await fetch(url);
+
+  if (!resposta.ok) {
+    throw new Error('Serviço de rotas indisponível.');
+  }
+
+  const dados = await resposta.json();
+
+  if (dados.code !== 'Ok' || !dados.routes || !dados.routes.length) {
+    throw new Error('Não foi possível encontrar uma rota pelas ruas.');
+  }
+
+  return {
+    coords: dados.routes[0].geometry.coordinates.map(ponto => [
+      ponto[1],
+      ponto[0]
+    ]),
+    duracao: Number(dados.routes[0].duration) || 300
+  };
+}
+
+/* INICIAR ROTA */
+async function iniciarRota(id) {
+  const lista = getAtend();
+  const item = lista.find(atendimento => atendimento.id === id);
+
+  if (!item) {
+    alert('Atendimento não encontrado.');
+    return;
+  }
+
+  if (item.status === 'finalizado') {
+    alert('Este atendimento já foi finalizado.');
+    return;
+  }
+
+  if (!item.empresa || !item.empresa.trim()) {
+    alert('O nome da empresa/cliente é obrigatório.');
+    return;
+  }
+
+  if (!Number.isFinite(Number(item.lat)) || !Number.isFinite(Number(item.lon))) {
+    try {
+      const enderecoParaBuscar = item.enderecoCompleto || item.endereco;
+      if (!enderecoParaBuscar) throw new Error('O atendimento não tem endereço cadastrado.');
+      const coordenadasEncontradas = await geocodificarEndereco(enderecoParaBuscar);
+      item.lat = coordenadasEncontradas[0];
+      item.lon = coordenadasEncontradas[1];
+      const indice = lista.findIndex(a => a.id === id);
+      if (indice >= 0) lista[indice] = item;
+      if (!saveAtend(lista)) return;
+    } catch (erro) {
+      alert('Não foi possível localizar o endereço para a rota. Confira rua, número, bairro e cidade.\n' + erro.message);
+      return;
+    }
+  }
+
+  if (!mapa) {
+    alert('O mapa ainda não está disponível.');
+    return;
+  }
+
+  let origem = BASE_MOSSORO;
+  let nomeOrigem = 'Base NOSSO FRIO - Mossoró';
+
+  /*
+    O GPS precisa ser autorizado no aparelho que está executando
+    esta função. Se o técnico iniciar a rota no próprio celular,
+    será a localização desse aparelho.
+  */
+  try {
+    const posicao = await new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('GPS indisponível'));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        pos => resolve([pos.coords.latitude, pos.coords.longitude]),
+        erro => reject(erro),
+        {
+          enableHighAccuracy: true,
+          timeout: 12000,
+          maximumAge: 10000
+        }
+      );
+    });
+
+    origem = posicao;
+    nomeOrigem = 'Localização GPS do aparelho';
+
+    localStorage.setItem('nf_tecnico_pos', JSON.stringify({
+      lat: origem[0],
+      lon: origem[1],
+      nome: nomeOrigem,
+      hora: new Date().toISOString()
+    }));
+  } catch (erro) {
+    alert(
+      'Não foi possível obter a localização atual do técnico.\n\n' +
+      'Ative o GPS, permita a localização para este site e tente novamente. ' +
+      'A rota não será iniciada com uma posição fictícia.'
+    );
+    return;
+  }
+
+  limparRotaDoMapa();
+
+  item.status = 'em_rota';
+  item.origemLat = origem[0];
+  item.origemLon = origem[1];
+  item.origemNome = nomeOrigem;
+  item.inicioRota = new Date().toISOString();
+
+  if (!saveAtend(lista)) return;
+
+  renderRastreio();
+  renderAdmin();
+
+  atualizarInfoMapa('Calculando trajeto para ' + item.empresa + '...');
+
+  let coordenadas;
+  let duracaoSegundos;
+  let rotaReal = true;
+
+  try {
+    const resultado = await obterRota(
+      origem[0],
+      origem[1],
+      Number(item.lat),
+      Number(item.lon)
+    );
+
+    coordenadas = resultado.coords;
+    duracaoSegundos = resultado.duracao;
+  } catch (erro) {
+    rotaReal = false;
+    coordenadas = [
+      origem,
+      [Number(item.lat), Number(item.lon)]
+    ];
+    duracaoSegundos = 300;
+
+    alert(
+      'Não foi possível consultar a rota pelas ruas.\n' +
+      'O mapa mostrará apenas uma linha de referência, não um trajeto real.'
+    );
+  }
+
+  desenharRotaNoMapa({
+    id,
+    item,
+    origem,
+    coordenadas,
+    duracaoSegundos,
+    rotaReal
+  });
+}
+
+function desenharRotaNoMapa(config) {
+  const {
+    id,
+    item,
+    origem,
+    coordenadas,
+    duracaoSegundos,
+    rotaReal
+  } = config;
+
+  rotaAtivaId = id;
+  rotaCoords = coordenadas;
+
+  const origemIcone = L.divIcon({
+    html: '<div style="background:#0f2f3e;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#f5c518;border:3px solid #f5c518;font-size:17px">❄️</div>',
+    className: '',
+    iconSize: [38, 38],
+    iconAnchor: [19, 19]
+  });
+
+  const destinoIcone = L.divIcon({
+    html: '<div style="background:#dc2626;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;border:3px solid #fff;font-size:17px">📍</div>',
+    className: '',
+    iconSize: [38, 38],
+    iconAnchor: [19, 19]
+  });
+
+  const motoIcone = L.divIcon({
+    html: '<div style="background:#0066ff;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:white;border:3px solid white;font-size:22px;box-shadow:0 4px 12px #0006">🛵</div>',
+    className: '',
+    iconSize: [42, 42],
+    iconAnchor: [21, 21]
+  });
+
+  marcadorOrigem = L.marker(origem, {icon: origemIcone})
+    .addTo(mapa)
+    .bindPopup('Saída do técnico: ' + escapar(item.origemNome || 'Base NOSSO FRIO'));
+
+  marcadorDestino = L.marker([Number(item.lat), Number(item.lon)], {
+    icon: destinoIcone
+  }).addTo(mapa)
+    .bindPopup(
+      '<b>' + escapar(item.empresa || item.nome) + '</b><br>' +
+      escapar(item.enderecoCompleto || item.endereco || '')
+    );
+
+  rotaExtraLayer = L.polyline(coordenadas, {
+    color: '#ffffff',
+    weight: 10,
+    opacity: .8
+  }).addTo(mapa);
+
+  rotaLayer = L.polyline(coordenadas, {
+    color: '#0066ff',
+    weight: 6,
+    opacity: .95,
+    dashArray: '10, 8'
+  }).addTo(mapa);
+
+  tecnicoMarker = L.marker(coordenadas[0], {
+    icon: motoIcone
+  }).addTo(mapa).bindPopup('Técnico em deslocamento');
+
+  mapa.fitBounds(rotaLayer.getBounds(), {padding: [30, 30]});
+
+  document.getElementById('map').scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
+
+  atualizarInfoMapa('📍 GPS ATIVO • acompanhando a posição real do técnico');
+  iniciarAcompanhamentoGPS(id, item);
+}
+
+/* ACOMPANHAMENTO REAL PELO GPS DO APARELHO DO TÉCNICO */
+function iniciarAcompanhamentoGPS(id, item) {
+  if (!navigator.geolocation) {
+    atualizarInfoMapa('GPS indisponível neste navegador.');
+    return;
+  }
+
+  ultimaAtualizacaoRota = 0;
+  gpsWatchId = navigator.geolocation.watchPosition(async pos => {
+    if (rotaAtivaId !== id) return;
+
+    const atual = [pos.coords.latitude, pos.coords.longitude];
+    gpsAtual = atual;
+    if (tecnicoMarker) tecnicoMarker.setLatLng(atual);
+    if (marcadorOrigem) marcadorOrigem.setLatLng(atual);
+
+    const lista = getAtend();
+    const registro = lista.find(a => a.id === id);
+    if (registro) {
+      registro.gpsAtual = { lat: atual[0], lon: atual[1], atualizadoEm: new Date().toISOString() };
+      saveAtend(lista);
+    }
+
+    atualizarInfoMapa('📍 GPS ativo • posição atualizada às ' + new Date().toLocaleTimeString('pt-BR'));
+
+    if (Date.now() - ultimaAtualizacaoRota > 20000) {
+      ultimaAtualizacaoRota = Date.now();
+      try {
+        const resultado = await obterRota(atual[0], atual[1], Number(item.lat), Number(item.lon));
+        if (rotaAtivaId !== id) return;
+        rotaCoords = resultado.coords;
+        if (rotaExtraLayer && mapa.hasLayer(rotaExtraLayer)) mapa.removeLayer(rotaExtraLayer);
+        if (rotaLayer && mapa.hasLayer(rotaLayer)) mapa.removeLayer(rotaLayer);
+        rotaExtraLayer = L.polyline(resultado.coords, {
+          color: '#ffffff', weight: 10, opacity: .8
+        }).addTo(mapa);
+        rotaLayer = L.polyline(resultado.coords, {
+          color: '#0066ff', weight: 6, opacity: .95
+        }).addTo(mapa);
+        if (tecnicoMarker) tecnicoMarker.setLatLng(atual);
+      } catch (erro) {
+        console.warn('Não foi possível atualizar o trajeto neste momento:', erro);
+      }
+    }
+  }, erro => {
+    let motivo = 'Não foi possível atualizar o GPS.';
+    if (erro.code === 1) motivo = 'Permita o acesso à localização para acompanhar a rota.';
+    if (erro.code === 2) motivo = 'Sinal de localização indisponível. Verifique o GPS.';
+    if (erro.code === 3) motivo = 'A localização demorou demais. Tentando novamente.';
+    atualizarInfoMapa('⚠️ ' + motivo);
+  }, {
+    enableHighAccuracy: true,
+    maximumAge: 3000,
+    timeout: 20000
+  });
+}
+
+/* FINALIZAR ATENDIMENTO */
+function finalizarRota(id) {
+  const lista = getAtend();
+  const item = lista.find(atendimento => atendimento.id === id);
+
+  if (!item) {
+    alert('Atendimento não encontrado.');
+    return;
+  }
+
+  if (!confirm('Confirmar que o técnico chegou e concluiu o serviço?')) {
+    return;
+  }
+
+  item.status = 'finalizado';
+  item.fimRota = new Date().toISOString();
+
+  if (!saveAtend(lista)) return;
+
+  limparRotaDoMapa();
+
+  document.getElementById('infoMapa').style.display = 'none';
+
+  renderRastreio();
+  renderAdmin();
+
+  alert('Atendimento finalizado.');
+}
+
+/* ENVIAR DADOS DO ATENDIMENTO PARA ROBERTO */
+function enviarParaTecnico(id) {
+  const item = getAtend().find(atendimento => atendimento.id === id);
+
+  if (!item) {
+    alert('Atendimento não encontrado.');
+    return;
+  }
+
+  const mensagem =
+    'Olá, Roberto Freitas! Tudo bem?\n\n' +
+    'Segue um atendimento da NOSSO FRIO para alinharmos.\n\n' +
+    '*Protocolo:* ' + item.id + '\n' +
+    '*Data:* ' + (item.data || 'A combinar') + '\n' +
+    '*Serviço:* ' + item.servico + '\n' +
+    '*Cliente:* ' + item.nome + '\n' +
+    '*Empresa:* ' + (item.empresa || 'Não informada') + '\n' +
+    '*Telefone:* ' + (item.telefone || 'Não informado') + '\n' +
+    '*Endereço:* ' + (item.enderecoCompleto || item.endereco || 'Não informado') + '\n\n' +
+    'Por favor, confirme o atendimento e o horário com o cliente.';
+
+  abrirZap(mensagem);
+}
+
+/* LISTA DE RASTREAMENTO */
+function renderRastreio() {
+  const todos = getAtend();
+  const dados = todos.filter(item => item.empresa && item.empresa.trim());
+  const cont = document.getElementById('listaRastreio');
+
+  if (!dados.length) {
+    cont.innerHTML =
+      '<div class="panel-card" style="text-align:center">' +
+      '<h3>🗺️ Nenhum atendimento cadastrado</h3>' +
+      '<p class="info-texto">Cadastre um atendimento na aba Técnico ou Agendar.</p>' +
+      '<button class="secondary" onclick="mostrarPainel(\'painel-tecnico\')">Ir para Técnico</button>' +
+      '</div>';
+    return;
+  }
+
+  cont.innerHTML = dados.map(item => {
+    let badge;
+    let botoes;
+
+    if (item.status === 'pendente') {
+      badge = '<span class="pill p-pend">PENDENTE</span>';
+
+      botoes =
+        '<button class="btn-rota" onclick="iniciarRota(\'' +
+        escapar(item.id) + '\')">▶ INICIAR ROTA</button>' +
+        '<button class="secondary whatsapp" onclick="enviarParaTecnico(\'' +
+        escapar(item.id) + '\')">📲 FALAR COM ROBERTO</button>';
+    } else if (item.status === 'em_rota') {
+      badge = '<span class="pill p-rota">🛵 EM ROTA</span>';
+
+      botoes =
+        '<button class="btn-fim" onclick="finalizarRota(\'' +
+        escapar(item.id) + '\')">✓ CONFIRMAR CHEGADA / FINALIZAR</button>' +
+        '<p class="info-texto">Acompanhamento GPS enquanto o técnico mantiver a rota ativa e a localização autorizada.</p>';
+    } else {
+      badge = '<span class="pill p-fim">✓ FINALIZADO</span>';
+
+      botoes =
+        '<div style="background:#dcfce7;color:#166534;padding:10px;border-radius:8px;font-size:12px;text-align:center">' +
+        'Serviço concluído • R$ ' +
+        Number(item.valor || 0).toLocaleString('pt-BR', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }) +
+        '</div>';
+    }
+
+    return '<div class="panel-card">' +
+      '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">' +
+      '<b>' + escapar(item.id) + '</b>' + badge + '</div>' +
+      '<p style="margin-top:8px"><b>' + escapar(item.nome) + '</b></p>' +
+      '<p style="color:#0066ff;font-size:12px">' + escapar(item.empresa) + '</p>' +
+      '<p class="info-texto">' + escapar(item.enderecoCompleto || item.endereco || '') +
+      '<br>Serviço: ' + escapar(item.servico) + '</p>' +
+      '<p style="font-size:10px;color:#94a3b8;margin-top:5px">' +
+      escapar(item.data || '') + (item.horaAgendada ? ' às ' + escapar(item.horaAgendada) : '') + ' • ' + escapar(item.telefone || '') + '</p>' +
+      botoes +
+      '</div>';
+  }).join('');
+}
+
+/* ADMINISTRAÇÃO */
+function renderAdmin() {
+  const dados = getAtend();
+
+  document.getElementById('kpi-total').textContent = dados.length;
+
+  document.getElementById('kpi-pend').textContent =
+    dados.filter(item => item.status === 'pendente').length;
+
+  document.getElementById('kpi-rota').textContent =
+    dados.filter(item => item.status === 'em_rota').length;
+
+  const faturado = dados
+    .filter(item => item.status === 'finalizado')
+    .reduce((total, item) => total + (Number(item.valor) || 0), 0);
+
+  document.getElementById('kpi-fat').textContent =
+    faturado.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    });
+
+  document.getElementById('tbodyAdmin').innerHTML = dados.map(item => {
+    let acoes = '';
+
+    if (item.status === 'pendente') {
+      acoes =
+        '<button class="btn-rota" onclick="iniciarRota(\'' +
+        escapar(item.id) + '\')">▶ Iniciar</button>';
+    } else if (item.status === 'em_rota') {
+      acoes =
+        '<button class="btn-fim" onclick="finalizarRota(\'' +
+        escapar(item.id) + '\')">✓ Finalizar</button>';
+    } else {
+      acoes = '<span style="color:#16a34a">Concluído</span>';
+    }
+
+    return '<tr>' +
+      '<td>' + escapar(item.data || '') + '<br>' + escapar(item.id) + '</td>' +
+      '<td><b>' + escapar(item.nome) + '</b><br>' +
+      escapar(item.empresa || 'Sem empresa') + '<br>' +
+      escapar(item.enderecoCompleto || item.endereco || '') + '</td>' +
+      '<td>' + escapar(item.servico) + '</td>' +
+      '<td>' + escapar(item.status) + '</td>' +
+      '<td>' + acoes + '</td>' +
+      '</tr>';
+  }).join('') ||
+    '<tr><td colspan="5" style="text-align:center;padding:20px">Nenhum atendimento cadastrado</td></tr>';
+}
+
+/* EXPORTAÇÃO CSV */
+document.getElementById('btnExportar').addEventListener('click', () => {
+  const dados = getAtend();
+
+  if (!dados.length) {
+    alert('Não há atendimentos para exportar.');
+    return;
+  }
+
+  const campos = [
+    'data', 'id', 'nome', 'telefone', 'empresa',
+    'enderecoCompleto', 'servico', 'status', 'valor'
+  ];
+
+  const linhas = [
+    campos.join(';'),
+    ...dados.map(item =>
+      campos.map(campo =>
+        '"' + String(item[campo] ?? '').replace(/"/g, '""') + '"'
+      ).join(';')
+    )
+  ];
+
+  const blob = new Blob(['\uFEFF' + linhas.join('\r\n')], {
+    type: 'text/csv;charset=utf-8;'
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download = 'nosso-frio-atendimentos.csv';
+  link.click();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+/* LIMPAR ATENDIMENTOS */
+document.getElementById('btnLimpar').addEventListener('click', () => {
+  if (!confirm('Deseja apagar TODOS os atendimentos deste navegador?')) {
+    return;
+  }
+
+  if (!saveAtend([])) return;
+
+  limparRotaDoMapa();
+
+  document.getElementById('infoMapa').style.display = 'none';
+
+  renderRastreio();
+  renderAdmin();
+
+  alert('Atendimentos removidos deste navegador.');
+});
+
+/* FINALIZAR O DIA: encerra o GPS ativo sem apagar os atendimentos */
+document.getElementById('btnFinalizarDia').addEventListener('click', () => {
+  const lista = getAtend();
+  const ativos = lista.filter(item => item.status === 'em_rota');
+  if (!ativos.length) {
+    alert('Não há rota ativa para encerrar.');
+    return;
+  }
+  if (!confirm('Encerrar as rotas ativas agora? Os atendimentos serão marcados como finalizados e o histórico será preservado.')) return;
+  lista.forEach(item => {
+    if (item.status === 'em_rota') {
+      item.status = 'finalizado';
+      item.fimRota = new Date().toISOString();
+    }
+  });
+  if (!saveAtend(lista)) return;
+  limparRotaDoMapa();
+  document.getElementById('infoMapa').style.display = 'none';
+  renderRastreio();
+  renderAdmin();
+  alert('Rotas do dia encerradas. O histórico foi preservado.');
+});
+
+/* INICIALIZAÇÃO */
+criarCartoes();
+inicializarMapa();
+renderRastreio();
+renderAdmin();
+
+/*
+  IMPORTANTE:
+  Este código armazena os dados no navegador por meio de localStorage.
+  Isso não sincroniza automaticamente celulares e computadores diferentes.
+
+  A animação da motinha é uma prévia baseada na rota calculada.
+  Para acompanhar o técnico em tempo real em outro aparelho, será
+  necessário integrar um banco de dados online e compartilhar o GPS
+  autorizado do aparelho do técnico.
+*/
+</script>
+
+</body>
 </html>
